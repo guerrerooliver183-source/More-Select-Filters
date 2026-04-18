@@ -5,15 +5,24 @@
 
 using namespace geode::prelude;
 
-bool validObject(GameObject* obj, const std::vector<Filter>& filterVector) { //ts so unoptimised bro
+bool validObject(GameObject* obj, const std::vector<Filter>& filterVector) {
     if (filterVector.empty()) return true;
-    std::unordered_map<std::string, bool> validTypesEquals {{"object id", false}, {"group", false}, {"layer", false}, 
-    {"z order", false}, {"color", false}, {"scale", false}, {"hsv", false}, {"type", false}};
+
+    std::unordered_map<std::string, bool> validTypesEquals {
+        {"object id", false}, {"group", false}, {"layer", false}, 
+        {"z order", false}, {"color", false}, {"scale", false}, 
+        {"hsv", false}, {"type", false}
+    };
     std::unordered_map<std::string, int> lastFilterIndex;
-    for (int i = 0; i < filterVector.size(); i++) lastFilterIndex[filterVector[i].type] = i;
+    
+    for (int i = 0; i < filterVector.size(); i++) {
+        lastFilterIndex[filterVector[i].type] = i;
+    }
+    
     int i = -1;
 
-    auto validFilter = [&i, &validTypesEquals, &lastFilterIndex, &filterVector] (const Filter& filter, bool condition) -> bool {
+    auto validFilter = [&i, &validTypesEquals, &lastFilterIndex, &filterVector] 
+                        (const Filter& filter, bool condition) -> bool {
         if (condition && !filter.notEquals) {
             validTypesEquals[filter.type] = true;
             return true;
@@ -26,6 +35,7 @@ bool validObject(GameObject* obj, const std::vector<Filter>& filterVector) { //t
     for (auto& filter : filterVector) {
         i++;
         if (validTypesEquals.at(filter.type)) continue;
+
         if (filter.type == "object id") {
             if (!validFilter(filter, obj->m_objectID == filter.intVal)) return false;
         }
@@ -65,12 +75,12 @@ bool validObject(GameObject* obj, const std::vector<Filter>& filterVector) { //t
         }
         else if (filter.type == "scale") {
             auto matched = false;
-            if (filter.typedFloatVal.type == 0 && (obj->m_scaleX == obj->m_scaleY ? obj->m_scaleX : -1) == filter.typedFloatVal.value) matched = true;
+            if (filter.typedFloatVal.type == 0 && (obj->m_scaleX == obj->m_scaleY ? obj->m_scaleX : -1.0f) == filter.typedFloatVal.value) matched = true;
             else if (filter.typedFloatVal.type == 1 && obj->m_scaleX == filter.typedFloatVal.value) matched = true;
             else if (filter.typedFloatVal.type == 2 && obj->m_scaleY == filter.typedFloatVal.value) matched = true;
             if (!validFilter(filter, matched)) return false;
         }
-        else if (filter.type == "hsv") { // color thing could be refactored kinda but fuck it its only like 5 extra lines
+        else if (filter.type == "hsv") {
             std::vector<GJSpriteColor*> cols;
             for (auto col : {obj->m_baseColor, obj->m_detailColor}) if (col) cols.push_back(col);
             bool matched = false;
@@ -99,14 +109,21 @@ bool validObject(GameObject* obj, const std::vector<Filter>& filterVector) { //t
     return true;
 }
 
+
 class $modify(EditUI, EditorUI) {
     bool init(LevelEditorLayer* lel) {	
-	    if (!EditorUI::init(lel)) return false;
-        auto button = CCMenuItemSpriteExtra::create(CCSprite::create("popupbutton.png"_spr), this, menu_selector(EditUI::onOpenFilterMenu));
+        if (!EditorUI::init(lel)) return false;
+        
+        auto button = CCMenuItemSpriteExtra::create(
+            CCSprite::create("popupbutton.png"_spr), 
+            this, 
+            menu_selector(EditUI::onOpenFilterMenu)
+        );
         button->setPosition(ccp(162.0f, -21.5f));
         button->setScale(0.85f);
         button->m_baseScale = 0.85f;
         m_deleteMenu->addChild(button);
+        
         return true;
     }
 
@@ -116,25 +133,40 @@ class $modify(EditUI, EditorUI) {
 
     void selectObject(GameObject* p0, bool p1) {
         if (filtersEnabled) {
-            if (validObject(p0, currentFilter)) EditorUI::selectObject(p0, p1);
-
-        } else EditorUI::selectObject(p0, p1);
+            if (validObject(p0, currentFilter)) {
+                EditorUI::selectObject(p0, p1);
+            }
+        } else {
+            EditorUI::selectObject(p0, p1);
+        }
     }
 
     void selectObjects(CCArray* p0, bool p1) {
         if (filtersEnabled) {
             auto validObjectsArray = CCArray::create();
             auto filter = currentFilter;
-            for (auto obj : CCArrayExt<GameObject*>(p0)) if (validObject(obj, filter)) validObjectsArray->addObject(obj);
-            if (validObjectsArray->count() > 0) EditorUI::selectObjects(validObjectsArray, p1);
-        } else EditorUI::selectObjects(p0, p1);
+            for (auto obj : CCArrayExt<GameObject*>(p0)) {
+                if (validObject(obj, filter)) {
+                    validObjectsArray->addObject(obj);
+                }
+            }
+            if (validObjectsArray->count() > 0) {
+                EditorUI::selectObjects(validObjectsArray, p1);
+            }
+        } else {
+            EditorUI::selectObjects(p0, p1);
+        }
     }
 };
 
 class $modify(Editor, LevelEditorLayer) {
     void removeObject(GameObject* p0, bool p1) {
         if (filtersEnabled && !p1) {
-            if (validObject(p0, currentFilter)) LevelEditorLayer::removeObject(p0, p1);
-        } else LevelEditorLayer::removeObject(p0, p1);
+            if (validObject(p0, currentFilter)) {
+                LevelEditorLayer::removeObject(p0, p1);
+            }
+        } else {
+            LevelEditorLayer::removeObject(p0, p1);
+        }
     }
 };
