@@ -1,6 +1,10 @@
 #include "ParseInput.hpp"
+#include <sstream>
+#include <iomanip>
+#include <vector>
+#include <unordered_set>
 
-std::string floatToFormattedString(float num) { // lowk ts just a utils file but i dont wanna change the name
+std::string floatToFormattedString(float num) {
     std::stringstream ss;
     ss << std::fixed << std::setprecision(2) << num;
     std::string string = ss.str();
@@ -11,11 +15,11 @@ std::string floatToFormattedString(float num) { // lowk ts just a utils file but
 
 std::vector<int> getIntVector(const std::string& input) {
     std::vector<int> intVector;
-    auto start = 0;
+    size_t start = 0;
     while (true) {
         auto comma = input.find(',', start);
         auto substr = input.substr(start, comma - start);
-        if (substr != "") {
+        if (!substr.empty()) {
             if (intTypesMap.contains(substr)) intVector.emplace_back(intTypesMap.at(substr));
             else intVector.emplace_back(std::strtol(substr.c_str(), nullptr, 10));
         }
@@ -27,11 +31,11 @@ std::vector<int> getIntVector(const std::string& input) {
 
 std::vector<TypedFloat> getTypedFloatVector(const std::string& input) {
     std::vector<TypedFloat> typedFloatVector;
-    auto start = 0;
+    size_t start = 0;
     while (true) {
         auto comma = input.find(',', start);
         auto substr = input.substr(start, comma - start);
-        if (substr != "") {
+        if (!substr.empty()) {
             auto num = std::strtof(substr.c_str(), nullptr);
             auto lastChar = substr.back();
             if (lastChar == 's' || lastChar == 'x') typedFloatVector.emplace_back(TypedFloat{num, 1});
@@ -46,11 +50,11 @@ std::vector<TypedFloat> getTypedFloatVector(const std::string& input) {
 
 std::vector<std::string> getStringVector(const std::string& input) {
     std::vector<std::string> stringVector;
-    auto start = 0;
+    size_t start = 0;
     while (true) {
         auto comma = input.find(',', start);
         auto substr = input.substr(start, comma - start);
-        if (substr != "") {
+        if (!substr.empty()) {
             std::unordered_set<std::string> keywords {"layout", "trigger", "decoration", "deco", "passable", "detail", "hazard", "solid"};
             if (keywords.contains(substr)) stringVector.emplace_back(substr);
             else return {"any"};
@@ -64,11 +68,11 @@ std::vector<std::string> getStringVector(const std::string& input) {
 std::string trimDuplicates(const std::string& input) {
     std::unordered_set<std::string> uniqueEntries;
     std::string output = "";
-    auto start = 0;
+    size_t start = 0;
     while (true) {
         auto comma = input.find(',', start);
         auto substr = input.substr(start, comma - start);
-        if (substr != "" && !uniqueEntries.contains(substr)) {
+        if (!substr.empty() && !uniqueEntries.contains(substr)) {
             uniqueEntries.insert(substr);
             output += (start == 0 ? "" : ",") + substr;
         }
