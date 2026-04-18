@@ -1,4 +1,6 @@
 #pragma once
+#include <Geode/Geode.hpp>
+#include <Geode/ui/Popup.hpp>
 
 using namespace geode::prelude;
 
@@ -19,12 +21,13 @@ struct Filter {
 extern std::vector<Filter> currentFilter;
 extern bool filtersEnabled;
 
-class MoreSelectFiltersPopup : public geode::Popup<> {
+class MoreSelectFiltersPopup : public Popup {
 public:
     CCNode* m_filtersContainer = nullptr;
 
     static MoreSelectFiltersPopup* create();
-    bool setup() override;
+    bool init() override;
+    bool setup();
 
     void onClear(CCObject* sender);
     void onCopyFromObject(CCObject* sender);
