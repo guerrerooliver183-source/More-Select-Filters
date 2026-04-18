@@ -5,6 +5,8 @@ on:
   push:
     branches:
       - "**"
+  release:
+    types: [published]
 
 jobs:
   build:
@@ -14,18 +16,14 @@ jobs:
         config:
         - name: Windows
           os: windows-latest
-
         - name: macOS
           os: macos-latest
-
         - name: iOS
           os: macos-latest
           target: iOS
-
         - name: Android32
           os: ubuntu-latest
           target: Android32
-
         - name: Android64
           os: ubuntu-latest
           target: Android64
@@ -55,3 +53,12 @@ jobs:
         with:
           name: Build Output
           path: ${{ steps.build.outputs.build-output }}
+
+      # I added this
+      - name: Upload to Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ steps.build.outputs.build-output }}/*.geode
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
