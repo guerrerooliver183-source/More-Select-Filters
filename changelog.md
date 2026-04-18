@@ -1,3 +1,7 @@
+## v1.0.7-beta.1
+- **Support Geode v5**
+- **Support GD 2.2081**
+
 ## v1.0.6
 - **Added** source
 
